@@ -7,3 +7,4 @@ pydantic
 celery
 redis
 python-multipart
+requests==2.32.3
