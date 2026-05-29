@@ -21,6 +21,7 @@ def meta_login():
 @router.get("/callback")
 def meta_callback(code: str = Query(...)):
 
+    # Step 1: Exchange code for access token
     token_response = requests.get(
         "https://graph.facebook.com/v23.0/oauth/access_token",
         params={
@@ -33,7 +34,26 @@ def meta_callback(code: str = Query(...)):
 
     token_data = token_response.json()
 
+    access_token = token_data.get("access_token")
+
+    if not access_token:
+        return {
+            "success": False,
+            "token_data": token_data
+        }
+
+    # Step 2: Get Facebook Pages
+    pages_response = requests.get(
+        "https://graph.facebook.com/v23.0/me/accounts",
+        params={
+            "access_token": access_token
+        }
+    )
+
+    pages_data = pages_response.json()
+
     return {
         "success": True,
-        "token_data": token_data
+        "access_token": access_token,
+        "pages": pages_data
     }
