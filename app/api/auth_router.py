@@ -52,8 +52,26 @@ def meta_callback(code: str = Query(...)):
 
     pages_data = pages_response.json()
 
-    return {
-        "success": True,
-        "access_token": access_token,
-        "pages": pages_data
+    page_id = pages_data["data"][0]["id"]
+
+    ig_response = requests.get(
+    f"https://graph.facebook.com/v23.0/{page_id}",
+    params={
+        "fields": "instagram_business_account",
+        "access_token": access_token
     }
+)
+    ig_data = ig_response.json()
+
+    return {
+    "success": True,
+    "page": pages_data["data"][0],
+    "instagram": ig_data
+}
+
+
+
+
+
+
+
