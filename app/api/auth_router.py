@@ -7,11 +7,9 @@ router = APIRouter(
     prefix="/auth/meta",
     tags=["Meta Auth"]
 )
-
-
 @router.get("/login")
 def meta_login():
 
-    return RedirectResponse(
-        get_meta_login_url()
-    )
+    return {
+        "url": get_meta_login_url()
+    }
