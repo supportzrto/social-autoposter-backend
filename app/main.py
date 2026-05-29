@@ -5,6 +5,7 @@ from app.database.database import Base, engine
 from app.models.post_model import Post
 from app.api.post_routes import router as post_router
 from app.api.brand_routes import router as brand_router
+from app.api.auth_router import router as auth_router
 
 app = FastAPI(
     title="Social Poster API",
@@ -17,7 +18,8 @@ Base.metadata.create_all(bind=engine)
 # CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[ "https://socail-autoposter-frontend.vercel.app",
+        "http://localhost:3000"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -25,6 +27,7 @@ app.add_middleware(
 
 app.include_router(post_router)
 app.include_router(brand_router)
+app.include_router(auth_router)
 
 @app.get("/")
 def home():
