@@ -21,12 +21,17 @@ def meta_login():
     )
 
 @router.post("/logout")
-def logout(
-    response: Response
-):
+def logout(response: Response):
 
-    response.delete_cookie(
-        key="access_token"
+    response.set_cookie(
+        key="access_token",
+        value="",
+        max_age=0,
+        expires=0,
+        httponly=True,
+        secure=True,
+        samesite="none",
+        path="/",
     )
 
     return {
