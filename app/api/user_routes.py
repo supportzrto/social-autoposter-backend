@@ -130,3 +130,29 @@ def get_my_brands(
     ).all()
 
     return brands
+
+@router.delete("/brands/{brand_id}")
+def disconnect_brand(
+    brand_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+
+    brand = db.query(Brand).filter(
+        Brand.id == brand_id,
+        Brand.user_id == current_user.id
+    ).first()
+
+    if not brand:
+        raise HTTPException(
+            status_code=404,
+            detail="Brand not found"
+        )
+
+    db.delete(brand)
+    db.commit()
+
+    return {
+        "success": True,
+        "message": "Brand disconnected"
+    }
