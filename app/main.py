@@ -3,9 +3,11 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.database.database import Base, engine 
 from app.models.post_model import Post
+from app.models.user_model import User
 from app.api.post_routes import router as post_router
 from app.api.brand_routes import router as brand_router
 from app.api.auth_router import router as auth_router
+from app.api.user_routes import router as user_router
 
 app = FastAPI(
     title="Social Poster API",
@@ -28,6 +30,7 @@ app.add_middleware(
 app.include_router(post_router)
 app.include_router(brand_router)
 app.include_router(auth_router)
+app.include_router(user_router)
 
 @app.get("/")
 def home():
