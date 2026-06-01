@@ -2,12 +2,19 @@ from sqlalchemy import Column, Integer, String, DateTime
 from datetime import datetime
 
 from app.database.database import Base
+from sqlalchemy import ForeignKey
 
 
 class Brand(Base):
     __tablename__ = "brands"
 
     id = Column(Integer, primary_key=True, index=True)
+
+    user_id = Column(
+    Integer,
+    ForeignKey("users.id"),
+    nullable=False
+)
 
     name = Column(String, nullable=False)
 

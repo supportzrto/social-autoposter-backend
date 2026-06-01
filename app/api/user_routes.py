@@ -12,6 +12,7 @@ from app.utils.auth import hash_password
 from app.utils.auth import verify_password
 from app.utils.jwt_handler import create_access_token
 from app.dependencies.auth_dependency import get_current_user
+from fastapi import Response
 
 router = APIRouter(
     prefix="/auth",
@@ -61,6 +62,7 @@ def register(
 @router.post("/login")
 def login(
     user: UserLogin,
+    response: Response,
     db: Session = Depends(get_db)
 ):
 
@@ -88,9 +90,17 @@ def login(
         "email": existing_user.email
     })
 
+    response.set_cookie(
+        key="access_token",
+        value=token,
+        httponly=True,
+        secure=True,
+        samesite="none",
+        max_age=60 * 60 * 24 * 7
+    )
+
     return {
         "success": True,
-        "token": token,
         "user": {
             "id": existing_user.id,
             "name": existing_user.name,

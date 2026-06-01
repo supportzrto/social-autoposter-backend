@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Query, Depends
+from fastapi import APIRouter, Query, Depends, Response
 from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 import requests
@@ -19,6 +19,19 @@ def meta_login():
     return RedirectResponse(
         get_meta_login_url()
     )
+
+@router.post("/logout")
+def logout(
+    response: Response
+):
+
+    response.delete_cookie(
+        key="access_token"
+    )
+
+    return {
+        "success": True
+    }
 
 
 @router.get("/callback")
