@@ -2,7 +2,9 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from app.database.database import get_db
+from app.dependencies.auth_dependency import get_current_user
 from app.models.brand_model import Brand
+from app.models.user_model import User
 from app.schemas.brand_schema import (
     BrandCreate,
     BrandResponse
@@ -34,3 +36,15 @@ def get_brands(
     db: Session = Depends(get_db)
 ):
     return db.query(Brand).all()
+
+@router.get("/me")
+def get_my_brands(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+
+    brands = db.query(Brand).filter(
+        Brand.user_id == current_user.id
+    ).all()
+
+    return brands
