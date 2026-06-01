@@ -38,6 +38,8 @@ def meta_callback(
         },
     )
 
+    print(token_response.json())
+
     token_data = token_response.json()
     access_token = token_data.get("access_token")
 
