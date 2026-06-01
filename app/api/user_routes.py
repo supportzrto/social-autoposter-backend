@@ -118,3 +118,14 @@ def get_me(
         "name": current_user.name,
         "email": current_user.email
     }
+
+@router.get("/brands/me")
+def get_my_brands(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    brands = db.query(Brand).filter(
+        Brand.user_id == current_user.id
+    ).all()
+
+    return brands

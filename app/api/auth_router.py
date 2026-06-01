@@ -7,6 +7,9 @@ import os
 from app.services.meta_service import get_meta_login_url
 from app.database.database import get_db
 from app.models.brand_model import Brand
+from app.dependencies.auth_dependency import get_current_user
+from app.models.user_model import User
+from fastapi import Depends
 
 router = APIRouter(
     prefix="/auth/meta",
@@ -42,7 +45,8 @@ def logout(response: Response):
 @router.get("/callback")
 def meta_callback(
     code: str = Query(...),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
 
     # Step 1: Exchange code for access token
@@ -98,8 +102,9 @@ def meta_callback(
 
     # Step 4: Save or update Brand in DB
     brand = db.query(Brand).filter(
-        Brand.facebook_page_id == page_id
-    ).first()
+    Brand.facebook_page_id == page_id,
+    Brand.user_id == current_user.id
+).first()
 
     if brand:
         # Update existing brand
@@ -108,11 +113,12 @@ def meta_callback(
     else:
         # Create new brand
         brand = Brand(
-            name=page_name,
-            facebook_page_id=page_id,
-            instagram_business_id=ig_id,
-            access_token=page_access_token,
-        )
+    name=page_name,
+    user_id=current_user.id,
+    facebook_page_id=page_id,
+    instagram_business_id=ig_id,
+    access_token=page_access_token,
+)
         db.add(brand)
 
     db.commit()
@@ -125,3 +131,4 @@ def meta_callback(
         "facebook_page_id": brand.facebook_page_id,
         "instagram_business_id": brand.instagram_business_id,
     }
+
