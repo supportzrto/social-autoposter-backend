@@ -9,6 +9,8 @@ from app.schemas.user_schema import (
     UserResponse
 )
 from app.utils.auth import hash_password
+from app.utils.auth import verify_password
+from app.utils.jwt_handler import create_access_token
 
 router = APIRouter(
     prefix="/auth",
@@ -52,5 +54,45 @@ def register(
             "id": new_user.id,
             "name": new_user.name,
             "email": new_user.email
+        }
+    }
+
+@router.post("/login")
+def login(
+    user: UserLogin,
+    db: Session = Depends(get_db)
+):
+
+    existing_user = db.query(User).filter(
+        User.email == user.email
+    ).first()
+
+    if not existing_user:
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid credentials"
+        )
+
+    if not verify_password(
+        user.password,
+        existing_user.password_hash
+    ):
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid credentials"
+        )
+
+    token = create_access_token({
+        "user_id": existing_user.id,
+        "email": existing_user.email
+    })
+
+    return {
+        "success": True,
+        "token": token,
+        "user": {
+            "id": existing_user.id,
+            "name": existing_user.name,
+            "email": existing_user.email
         }
     }
