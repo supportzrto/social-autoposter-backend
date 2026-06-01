@@ -11,6 +11,7 @@ from app.schemas.user_schema import (
 from app.utils.auth import hash_password
 from app.utils.auth import verify_password
 from app.utils.jwt_handler import create_access_token
+from app.dependencies.auth_dependency import get_current_user
 
 router = APIRouter(
     prefix="/auth",
@@ -95,4 +96,15 @@ def login(
             "name": existing_user.name,
             "email": existing_user.email
         }
+    }
+
+@router.get("/me")
+def get_me(
+    current_user: User = Depends(get_current_user)
+):
+
+    return {
+        "id": current_user.id,
+        "name": current_user.name,
+        "email": current_user.email
     }
