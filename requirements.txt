@@ -8,3 +8,6 @@ celery
 redis
 python-multipart
 requests==2.32.3
+python-jose[cryptography]
+passlib[bcrypt]
+email-validator
