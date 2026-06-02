@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 
 from app.database.database import get_db
 
@@ -94,3 +95,36 @@ def get_posts(
         })
 
     return formatted_posts
+
+@router.get("/posts/stats")
+def get_post_stats(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(
+        get_current_user
+    )
+):
+
+    posts = db.query(Post).filter(
+        Post.user_id == current_user.id
+    )
+
+    total_posts = posts.count()
+
+    scheduled = posts.filter(
+        Post.status == "PENDING"
+    ).count()
+
+    published = posts.filter(
+        Post.status == "PUBLISHED"
+    ).count()
+
+    failed = posts.filter(
+        Post.status == "FAILED"
+    ).count()
+
+    return {
+        "total_posts": total_posts,
+        "scheduled": scheduled,
+        "published": published,
+        "failed": failed
+    }
