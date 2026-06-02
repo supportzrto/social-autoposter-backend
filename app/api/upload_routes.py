@@ -1,5 +1,4 @@
 from fastapi import APIRouter, UploadFile, File
-
 import pandas as pd
 
 router = APIRouter(
@@ -17,8 +16,15 @@ async def upload_excel(
         file.file
     )
 
+    preview = (
+        df.head(10)
+        .fillna("")
+        .to_dict(orient="records")
+    )
+
     return {
         "success": True,
         "rows": len(df),
-        "columns": list(df.columns)
+        "columns": list(df.columns),
+        "preview": preview
     }
