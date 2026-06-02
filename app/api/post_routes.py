@@ -212,3 +212,12 @@ def update_post(
     db.refresh(post)
 
     return post
+
+@router.post("/posts/{post_id}/publish")
+def publish_now(post_id: int):
+
+    publish_post(post_id)
+
+    return {
+        "success": True
+    }
