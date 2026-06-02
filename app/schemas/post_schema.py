@@ -6,14 +6,19 @@ from pydantic import BaseModel
 
 
 class PostCreate(BaseModel):
-    brand_id: int
 
     title: str
+
     caption: str
+
     media_urls: List[str]
+
     media_type: str
+
     platforms: List[str]
+
     schedule_time: datetime
+
     status: str = "PENDING"
 
 

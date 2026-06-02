@@ -3,6 +3,8 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func
 
 from app.database.database import get_db
+from fastapi import HTTPException
+from app.models.brand_model import Brand
 
 from app.models.post_model import Post
 from app.models.user_model import User
@@ -33,11 +35,22 @@ def create_post(
         get_current_user
     )
 ):
+    
+    brand = db.query(Brand).filter(
+        Brand.user_id == current_user.id
+    ).first()
+
+    if not brand:
+
+       raise HTTPException(
+            status_code=400,
+            detail="No Instagram account connected"
+       )
 
     new_post = Post(
         user_id=current_user.id,
 
-        brand_id=post.brand_id,
+        brand_id=post.brand.id,
 
         title=post.title,
 
