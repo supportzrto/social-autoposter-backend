@@ -170,3 +170,45 @@ def delete_post(
         "success": True,
         "message": "Post deleted successfully"
     }
+
+@router.put("/posts/{post_id}")
+def update_post(
+    post_id: int,
+    post_data: PostCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(
+        get_current_user
+    )
+):
+
+    post = db.query(Post).filter(
+        Post.id == post_id,
+        Post.user_id == current_user.id
+    ).first()
+
+    if not post:
+
+        raise HTTPException(
+            status_code=404,
+            detail="Post not found"
+        )
+
+    post.title = post_data.title
+
+    post.caption = post_data.caption
+
+    post.media_urls = post_data.media_urls
+
+    post.media_type = post_data.media_type
+
+    post.platforms = post_data.platforms
+
+    post.schedule_time = post_data.schedule_time
+
+    post.status = post_data.status
+
+    db.commit()
+
+    db.refresh(post)
+
+    return post
