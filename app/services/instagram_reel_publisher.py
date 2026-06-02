@@ -28,8 +28,18 @@ def publish_instagram_reel(
 
     creation_id = create_data["id"]
 
-    time.sleep(10)
+    time.sleep(30)
 
+    status_response = requests.get(
+    f"https://graph.facebook.com/v23.0/{creation_id}",
+    params={
+        "fields": "status_code",
+        "access_token": access_token
+    }
+)
+
+    print("Reel Status:", status_response.json())
+  
     publish_response = requests.post(
         f"https://graph.facebook.com/v23.0/{instagram_business_id}/media_publish",
         data={
