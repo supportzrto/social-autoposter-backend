@@ -2,6 +2,7 @@ from app.database.database import SessionLocal
 
 from app.models.post_model import Post
 from app.models.brand_model import Brand
+from datetime import datetime
 
 from app.services.instagram_publisher import (
     publish_instagram_image
@@ -85,6 +86,7 @@ def publish_post(post_id: int):
         )
 
         post.status = "PUBLISHED"
+        post.published_at = datetime.utcnow()
 
         db.commit()
 
