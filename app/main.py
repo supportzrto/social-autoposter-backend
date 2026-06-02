@@ -15,6 +15,9 @@ from app.api.upload_routes import (
 from app.api.media_routes import (
     router as media_router
 )
+from app.api.scheduler_routes import (
+    router as scheduler_router
+)
 
 
 
@@ -45,6 +48,9 @@ app.include_router(user_router)
 app.include_router(upload_router)
 app.include_router(
     media_router
+)
+app.include_router(
+    scheduler_router
 )
 
 @app.get("/")
