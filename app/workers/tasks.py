@@ -12,6 +12,10 @@ from app.services.instagram_reel_publisher import (
     publish_instagram_reel
 )
 
+from app.services.instagram_carousel_publisher import (
+    publish_instagram_carousel
+)
+
 
 def publish_post(post_id: int):
 
@@ -32,6 +36,7 @@ def publish_post(post_id: int):
             return
 
         post.status = "PROCESSING"
+
         db.commit()
 
         print(
@@ -68,6 +73,7 @@ def publish_post(post_id: int):
 
         media_url = post.media_urls[0]
 
+        # VIDEO → Reel
         if post.media_type.upper() == "VIDEO":
 
             result = publish_instagram_reel(
@@ -82,6 +88,24 @@ def publish_post(post_id: int):
                 caption=post.caption or ""
             )
 
+        # CAROUSEL → Multiple Images
+        elif post.media_type.upper() == "CAROUSEL":
+
+            result = publish_instagram_carousel(
+                instagram_business_id=
+                    brand.instagram_business_id,
+
+                access_token=
+                    brand.access_token,
+
+                image_urls=
+                    post.media_urls,
+
+                caption=
+                    post.caption or ""
+            )
+
+        # IMAGE → Single Image
         else:
 
             result = publish_instagram_image(
@@ -102,7 +126,9 @@ def publish_post(post_id: int):
         )
 
         post.status = "PUBLISHED"
+
         post.published_at = datetime.utcnow()
+
         post.error_message = None
 
         db.commit()
@@ -121,6 +147,7 @@ def publish_post(post_id: int):
         if post:
 
             post.status = "FAILED"
+
             post.error_message = str(e)
 
             db.commit()
