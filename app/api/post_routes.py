@@ -140,3 +140,33 @@ def get_post_stats(
         "published": published,
         "failed": failed
     }
+
+@router.delete("/posts/{post_id}")
+def delete_post(
+    post_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(
+        get_current_user
+    )
+):
+
+    post = db.query(Post).filter(
+        Post.id == post_id,
+        Post.user_id == current_user.id
+    ).first()
+
+    if not post:
+
+        raise HTTPException(
+            status_code=404,
+            detail="Post not found"
+        )
+
+    db.delete(post)
+
+    db.commit()
+
+    return {
+        "success": True,
+        "message": "Post deleted successfully"
+    }
