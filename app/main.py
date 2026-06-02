@@ -38,7 +38,7 @@ app.include_router(post_router)
 app.include_router(brand_router)
 app.include_router(auth_router)
 app.include_router(user_router)
-app.include_router(brand_router)
+# app.include_router(brand_router)
 app.include_router(upload_router)
 
 @app.get("/")
