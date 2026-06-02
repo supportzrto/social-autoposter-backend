@@ -1,17 +1,23 @@
-from app.database.database import SessionLocal
+from datetime import datetime
 
+from app.database.database import SessionLocal
 from app.models.post_model import Post
 from app.models.brand_model import Brand
-from datetime import datetime
 
 from app.services.instagram_publisher import (
     publish_instagram_image
+)
+
+from app.services.instagram_reel_publisher import (
+    publish_instagram_reel
 )
 
 
 def publish_post(post_id: int):
 
     db = SessionLocal()
+
+    post = None
 
     try:
 
@@ -22,12 +28,10 @@ def publish_post(post_id: int):
         )
 
         if not post:
-
             print("❌ Post not found")
             return
 
         post.status = "PROCESSING"
-
         db.commit()
 
         print(
@@ -43,42 +47,54 @@ def publish_post(post_id: int):
         )
 
         if not brand:
-
             raise Exception(
                 "Brand not found"
             )
 
         if not brand.instagram_business_id:
-
             raise Exception(
                 "Instagram Business ID missing"
             )
 
         if not brand.access_token:
-
             raise Exception(
                 "Access token missing"
             )
 
         if not post.media_urls:
-
             raise Exception(
                 "Media URL missing"
             )
 
-        image_url = post.media_urls[0]
+        media_url = post.media_urls[0]
 
-        result = publish_instagram_image(
-            instagram_business_id=
-                brand.instagram_business_id,
+        if post.media_type.upper() == "VIDEO":
 
-            access_token=
-                brand.access_token,
+            result = publish_instagram_reel(
+                instagram_business_id=
+                    brand.instagram_business_id,
 
-            image_url=image_url,
+                access_token=
+                    brand.access_token,
 
-            caption=post.caption or ""
-        )
+                video_url=media_url,
+
+                caption=post.caption or ""
+            )
+
+        else:
+
+            result = publish_instagram_image(
+                instagram_business_id=
+                    brand.instagram_business_id,
+
+                access_token=
+                    brand.access_token,
+
+                image_url=media_url,
+
+                caption=post.caption or ""
+            )
 
         print(
             "Instagram Response:",
@@ -87,6 +103,7 @@ def publish_post(post_id: int):
 
         post.status = "PUBLISHED"
         post.published_at = datetime.utcnow()
+        post.error_message = None
 
         db.commit()
 
@@ -104,7 +121,6 @@ def publish_post(post_id: int):
         if post:
 
             post.status = "FAILED"
-
             post.error_message = str(e)
 
             db.commit()
