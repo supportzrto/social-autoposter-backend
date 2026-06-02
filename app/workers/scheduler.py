@@ -18,14 +18,16 @@ def check_scheduled_posts():
     try:
 
         posts = (
-            db.query(Post)
-            .filter(
-                Post.status == "PENDING",
-                Post.schedule_time
-                <= datetime.utcnow()
-            )
-            .all()
-        )
+    db.query(Post)
+    .filter(
+        Post.status.in_([
+            "PENDING",
+            "FAILED"
+        ]),
+        Post.schedule_time <= datetime.utcnow()
+    )
+    .all()
+)
 
         print(
             f"Found {len(posts)} posts"
