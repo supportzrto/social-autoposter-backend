@@ -35,22 +35,22 @@ def create_post(
         get_current_user
     )
 ):
-    
+
     brand = db.query(Brand).filter(
         Brand.user_id == current_user.id
     ).first()
 
     if not brand:
 
-       raise HTTPException(
+        raise HTTPException(
             status_code=400,
             detail="No Instagram account connected"
-       )
+        )
 
     new_post = Post(
         user_id=current_user.id,
 
-        brand_id=post.brand.id,
+        brand_id=brand.id,
 
         title=post.title,
 
@@ -74,7 +74,6 @@ def create_post(
     db.refresh(new_post)
 
     return new_post
-
 
 @router.get("/posts")
 def get_posts(
