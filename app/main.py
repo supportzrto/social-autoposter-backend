@@ -12,6 +12,9 @@ from app.api.user_routes import router as brand_router
 from app.api.upload_routes import (
     router as upload_router
 )
+from app.api.media_routes import (
+    router as media_router
+)
 
 
 
@@ -40,6 +43,9 @@ app.include_router(auth_router)
 app.include_router(user_router)
 # app.include_router(brand_router)
 app.include_router(upload_router)
+app.include_router(
+    media_router
+)
 
 @app.get("/")
 def home():
