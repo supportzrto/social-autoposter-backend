@@ -99,7 +99,7 @@ def get_posts(
             "media_urls": post.media_urls,
             "media_type": post.media_type,
             "platforms": post.platforms,
-            "schedule_time": post.schedule_time,
+            "schedule_time": post.schedule_time.isoformat() + "Z",
             "status": post.status,
             "created_at": post.created_at,
             "published_at": post.published_at,
