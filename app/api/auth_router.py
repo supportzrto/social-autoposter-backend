@@ -24,6 +24,10 @@ def meta_login(
         get_current_user
     )
 ):
+    print(
+        "LOGIN USER:",
+        current_user.id
+    )
 
     return RedirectResponse(
         get_meta_login_url(
