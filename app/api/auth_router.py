@@ -46,12 +46,11 @@ def logout(response: Response):
 @router.get("/callback")
 def meta_callback(
     code: str = Query(...),
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    db: Session = Depends(get_db)
 ):
     
     print("CALLBACK HIT")
-    print("CURRENT USER:", current_user.id)
+    
 
     # Step 1: Exchange code for access token
     token_response = requests.get(
@@ -111,7 +110,7 @@ def meta_callback(
     # Step 4: Save or update Brand in DB
     brand = db.query(Brand).filter(
     Brand.facebook_page_id == page_id,
-    Brand.user_id == current_user.id
+    Brand.user_id == 3
 ).first()
 
     if brand:
@@ -124,7 +123,7 @@ def meta_callback(
         brand = Brand(
             name=page_name,
 
-            user_id=current_user.id,
+            user_id=3,
 
             facebook_page_id=page_id,
 
