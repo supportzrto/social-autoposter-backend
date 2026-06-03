@@ -188,35 +188,58 @@ def get_pages(
     return response.json()
 
 @router.get("/all-pages")
-def all_pages():
-
-    return [
-        {
-            "id": "839194175933696",
-            "name": "Hytoma"
-        },
-        {
-            "id": "KRIDAY_PAGE_ID",
-            "name": "Kriday Fashion"
-        }
-    ]
-
-@router.get("/test-kriday")
-def test_kriday(
-    db: Session = Depends(get_db)
+def get_all_pages(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(
+        get_current_user
+    )
 ):
 
-    brand = db.query(Brand).first()
+    brand = (
+        db.query(Brand)
+        .filter(
+            Brand.user_id ==
+            current_user.id
+        )
+        .first()
+    )
+
+    if not brand:
+        return {
+            "error": "No brand found"
+        }
+
+    print(
+        "USER TOKEN:",
+        brand.user_access_token
+    )
 
     response = requests.get(
-        "https://graph.facebook.com/v23.0/844102702122155",
+        "https://graph.facebook.com/v23.0/me/accounts",
         params={
-            "fields": "id,name,instagram_business_account",
-            "access_token": brand.access_token
+            "access_token":
+                brand.user_access_token
         }
     )
 
     return response.json()
+
+# @router.get("/test-kriday")
+# def test_kriday(
+#     db: Session = Depends(get_db)
+# ):
+
+#     brand = db.query(Brand).first()
+
+#     response = requests.get(
+#         "https://graph.facebook.com/v23.0/844102702122155",
+#         params={
+#             "fields": "id,name,instagram_business_account",
+#             "access_token": brand.access_token
+#         }
+#     )
+
+#     return response.json()
 
 # @router.get("/test-page")
 # def test_page(
