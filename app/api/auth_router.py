@@ -42,21 +42,16 @@ def logout(response: Response):
         "success": True
     }
 
-@router.get("/callback")
-def meta_callback(
-    code: str = Query(...),
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
-):
-    print("CALLBACK HIT")
 
-    
 @router.get("/callback")
 def meta_callback(
     code: str = Query(...),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
+    
+    print("CALLBACK HIT")
+    print("CURRENT USER:", current_user.id)
 
     # Step 1: Exchange code for access token
     token_response = requests.get(
@@ -140,12 +135,14 @@ def meta_callback(
             user_access_token=user_access_token
         )
         db.add(brand)
-        print("ACCESS TOKEN:", access_token)
-        print("USER ACCESS TOKEN:", user_access_token)
-        print("BEFORE SAVE:", brand.user_access_token)
+        
 
     db.commit()
     db.refresh(brand)
+
+    print("ACCESS TOKEN:", access_token)
+    print("USER ACCESS TOKEN:", user_access_token)
+    print("BEFORE SAVE:", brand.user_access_token)
 
     print(
         "AFTER SAVE:",
