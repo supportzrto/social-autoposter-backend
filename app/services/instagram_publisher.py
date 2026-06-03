@@ -1,4 +1,5 @@
 import requests
+import time
 
 
 def publish_instagram_image(
@@ -7,8 +8,6 @@ def publish_instagram_image(
     image_url: str,
     caption: str
 ):
-
-    # Create Media Container
 
     create_response = requests.post(
         f"https://graph.facebook.com/v23.0/{instagram_business_id}/media",
@@ -31,7 +30,35 @@ def publish_instagram_image(
 
     creation_id = create_data["id"]
 
-    # Publish Container
+    # Wait for Instagram to process media
+    for _ in range(12):
+
+        status_response = requests.get(
+            f"https://graph.facebook.com/v23.0/{creation_id}",
+            params={
+                "fields": "status_code",
+                "access_token": access_token
+            }
+        )
+
+        status_data = (
+            status_response.json()
+        )
+
+        print(
+            "Image Status:",
+            status_data
+        )
+
+        if (
+            status_data.get(
+                "status_code"
+            )
+            == "FINISHED"
+        ):
+            break
+
+        time.sleep(5)
 
     publish_response = requests.post(
         f"https://graph.facebook.com/v23.0/{instagram_business_id}/media_publish",
@@ -41,7 +68,9 @@ def publish_instagram_image(
         }
     )
 
-    publish_data = publish_response.json()
+    publish_data = (
+        publish_response.json()
+    )
 
     print("Publish:", publish_data)
 
