@@ -139,14 +139,9 @@ def meta_callback(
     db.commit()
     db.refresh(brand)
 
-    print("ACCESS TOKEN:", access_token)
-    print("USER ACCESS TOKEN:", user_access_token)
-    print("BEFORE SAVE:", brand.user_access_token)
+    
 
-    print(
-        "AFTER SAVE:",
-        brand.user_access_token
-    )
+    
 
     return {
         "success": True,
@@ -180,10 +175,7 @@ def get_pages(
             detail="No connected brand found"
         )
     
-    print(
-        "TOKEN:",
-        brand.access_token
-    )
+   
 
     response = requests.get(
         "https://graph.facebook.com/v23.0/me",
@@ -192,10 +184,7 @@ def get_pages(
                 brand.access_token
         }
     )
-    print(
-        "META RESPONSE:",
-        response.json()
-    )
+    
 
     return response.json()
 
