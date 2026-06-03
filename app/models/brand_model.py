@@ -24,6 +24,8 @@ class Brand(Base):
 
     access_token = Column(String, nullable=True)
 
+    user_access_token = Column(String,nullable=True)
+
     # refresh_token = Column(String, nullable=True)
 
     # token_expires_at = Column(DateTime, nullable=True)

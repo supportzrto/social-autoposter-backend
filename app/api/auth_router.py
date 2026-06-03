@@ -65,6 +65,7 @@ def meta_callback(
 
     token_data = token_response.json()
     access_token = token_data.get("access_token")
+    user_access_token = access_token
     
 
     if not access_token:
@@ -113,16 +114,23 @@ def meta_callback(
     if brand:
         # Update existing brand
         brand.access_token = page_access_token
+        brand.user_access_token = (user_access_token)
         brand.instagram_business_id = ig_id
     else:
         # Create new brand
         brand = Brand(
-    name=page_name,
-    user_id=current_user.id,
-    facebook_page_id=page_id,
-    instagram_business_id=ig_id,
-    access_token=page_access_token,
-)
+            name=page_name,
+
+            user_id=current_user.id,
+
+            facebook_page_id=page_id,
+
+            instagram_business_id=ig_id,
+
+            access_token=page_access_token,
+
+            user_access_token=user_access_token
+        )
         db.add(brand)
 
     db.commit()
