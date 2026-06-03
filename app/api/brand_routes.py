@@ -5,6 +5,8 @@ from app.database.database import get_db
 from app.dependencies.auth_dependency import get_current_user
 from app.models.brand_model import Brand
 from app.models.user_model import User
+from sqlalchemy.exc import IntegrityError
+from fastapi import HTTPException
 from app.schemas.brand_schema import (
     BrandCreate,
     BrandResponse
@@ -84,18 +86,30 @@ def delete_brand(
     )
 
     if not brand:
+        raise HTTPException(
+            status_code=404,
+            detail="Brand not found"
+        )
+
+    try:
+
+        db.delete(brand)
+
+        db.commit()
+
         return {
-            "error":
-            "Brand not found"
+            "success": True
         }
 
-    db.delete(brand)
+    except IntegrityError:
 
-    db.commit()
+        db.rollback()
 
-    return {
-        "success": True
-    }
+        raise HTTPException(
+            status_code=400,
+            detail=
+            "Cannot delete brand because posts exist for this brand"
+        )
 
 @router.put("/{brand_id}")
 def update_brand(
