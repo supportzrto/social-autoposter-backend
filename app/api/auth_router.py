@@ -178,3 +178,51 @@ def get_pages(
     )
 
     return response.json()
+
+@router.get("/all-pages")
+def all_pages():
+
+    return [
+        {
+            "id": "839194175933696",
+            "name": "Hytoma"
+        },
+        {
+            "id": "KRIDAY_PAGE_ID",
+            "name": "Kriday Fashion"
+        }
+    ]
+
+@router.get("/test-kriday")
+def test_kriday(
+    db: Session = Depends(get_db)
+):
+
+    brand = db.query(Brand).first()
+
+    response = requests.get(
+        "https://graph.facebook.com/v23.0/61583357375569",
+        params={
+            "fields": "id,name,instagram_business_account",
+            "access_token": brand.access_token
+        }
+    )
+
+    return response.json()
+
+# @router.get("/test-page")
+# def test_page(
+#     db: Session = Depends(get_db)
+# ):
+
+#     brand = db.query(Brand).first()
+
+#     response = requests.get(
+#         "https://graph.facebook.com/v23.0/61583357375569",
+#         params={
+#             "fields": "id,name",
+#             "access_token": brand.access_token
+#         }
+#     )
+
+#     return response.json()
