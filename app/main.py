@@ -25,6 +25,10 @@ from app.workers.scheduler import (
     check_scheduled_posts
 )
 
+from app.api.brand_routes import (
+    router as brand_router
+)
+
 @asynccontextmanager
 async def lifespan(app):
 
@@ -82,6 +86,10 @@ app.include_router(
 )
 app.include_router(
     scheduler_router
+)
+
+app.include_router(
+    brand_router
 )
 
 @app.get("/")
