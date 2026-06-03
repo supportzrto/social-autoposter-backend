@@ -42,7 +42,15 @@ def logout(response: Response):
         "success": True
     }
 
+@router.get("/callback")
+def meta_callback(
+    code: str = Query(...),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    print("CALLBACK HIT")
 
+    
 @router.get("/callback")
 def meta_callback(
     code: str = Query(...),
