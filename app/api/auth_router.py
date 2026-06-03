@@ -211,7 +211,8 @@ def get_all_pages(
         db.query(Brand)
         .filter(
             Brand.user_id ==
-            current_user.id
+            current_user.id,
+            Brand.user_access_token.isnot(None)
         )
         .first()
     )
@@ -220,6 +221,10 @@ def get_all_pages(
         return {
             "error": "No brand found"
         }
+    print("CURRENT USER:", current_user.id)
+    print("FOUND BRAND ID:", brand.id)
+    print("FOUND BRAND NAME:", brand.name)
+    print("USER TOKEN:", brand.user_access_token)
 
     print(
         "USER TOKEN:",
@@ -234,38 +239,6 @@ def get_all_pages(
         }
     )
 
+    print("META RESPONSE:", response.json())
+
     return response.json()
-
-# @router.get("/test-kriday")
-# def test_kriday(
-#     db: Session = Depends(get_db)
-# ):
-
-#     brand = db.query(Brand).first()
-
-#     response = requests.get(
-#         "https://graph.facebook.com/v23.0/844102702122155",
-#         params={
-#             "fields": "id,name,instagram_business_account",
-#             "access_token": brand.access_token
-#         }
-#     )
-
-#     return response.json()
-
-# @router.get("/test-page")
-# def test_page(
-#     db: Session = Depends(get_db)
-# ):
-
-#     brand = db.query(Brand).first()
-
-#     response = requests.get(
-#         "https://graph.facebook.com/v23.0/61583357375569",
-#         params={
-#             "fields": "id,name",
-#             "access_token": brand.access_token
-#         }
-#     )
-
-#     return response.json()
