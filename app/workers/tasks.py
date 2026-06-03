@@ -20,6 +20,14 @@ from app.services.facebook_publisher import (
     publish_facebook_image
 )
 
+from app.services.facebook_video_publisher import (
+    publish_facebook_video
+)
+
+from app.services.facebook_carousel_publisher import (
+    publish_facebook_carousel
+)
+
 
 def publish_post(post_id: int):
 
@@ -60,9 +68,12 @@ def publish_post(post_id: int):
                 "Brand not found"
             )
 
-        if not brand.instagram_business_id:
+        if (
+            "INSTAGRAM" in post.platforms
+            and not brand.instagram_business_id
+        ):
             raise Exception(
-                "Instagram Business ID missing"
+                 "Instagram Business ID missing"
             )
 
         if not brand.access_token:
@@ -130,27 +141,63 @@ def publish_post(post_id: int):
         )
 
         if (
-            "FACEBOOK" in post.platforms
-            and brand.facebook_page_id
+           "FACEBOOK" in post.platforms
+           and brand.facebook_page_id
         ):
-            
-            fb_result = publish_facebook_image(
-                page_id=
-                    brand.facebook_page_id,
+            if (
+                post.media_type.upper()
+                == "VIDEO"
+            ):
+                fb_result = (
+                   publish_facebook_video(
+                        page_id=
+                            brand.facebook_page_id,
 
-                access_token=
-                    brand.access_token,
+                        access_token=
+                            brand.access_token,
+                
+                        video_url=
+                            media_url,
 
-                image_url=media_url,
-
-                caption=post.caption or ""
-            )
-
+                        caption=
+                            post.caption or ""
+                        
+                   )
+                )
+            elif (
+                post.media_type.upper()
+                == "CAROUSEL"
+            ):
+                fb_result = (
+                    publish_facebook_carousel(
+                        page_id=
+                            brand.facebook_page_id,
+                        access_token=
+                            brand.access_token,
+                        image_urls=
+                            post.media_urls,
+                        caption=
+                            post.caption or ""
+                    )
+                )
+            else:
+                fb_result = (
+                    publish_facebook_image(
+                        page_id=
+                            brand.facebook_page_id,
+                        access_token=
+                            brand.access_token,
+                        image_url=
+                            media_url,
+                        caption=
+                            post.caption or ""
+                    )
+                )
             print(
-               "Facebook Response:",
+                "Facebook Response:",
                 fb_result
             )
-            
+
         post.status = "PUBLISHED"
 
         post.published_at = datetime.utcnow()
