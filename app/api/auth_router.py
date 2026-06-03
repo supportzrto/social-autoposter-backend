@@ -156,13 +156,22 @@ def get_pages(
             status_code=404,
             detail="No connected brand found"
         )
+    
+    print(
+        "TOKEN:",
+        brand.access_token
+    )
 
     response = requests.get(
-        "https://graph.facebook.com/v23.0/me/accounts",
+        "https://graph.facebook.com/v23.0/me",
         params={
             "access_token":
                 brand.access_token
         }
+    )
+    print(
+        "META RESPONSE:",
+        response.json()
     )
 
     return response.json()
