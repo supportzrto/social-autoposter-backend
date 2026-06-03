@@ -16,6 +16,10 @@ from app.services.instagram_carousel_publisher import (
     publish_instagram_carousel
 )
 
+from app.services.facebook_publisher import (
+    publish_facebook_image
+)
+
 
 def publish_post(post_id: int):
 
@@ -125,6 +129,28 @@ def publish_post(post_id: int):
             result
         )
 
+        if (
+            "FACEBOOK" in post.platforms
+            and brand.facebook_page_id
+        ):
+            
+            fb_result = publish_facebook_image(
+                page_id=
+                    brand.facebook_page_id,
+
+                access_token=
+                    brand.access_token,
+
+                image_url=media_url,
+
+                caption=post.caption or ""
+            )
+
+            print(
+               "Facebook Response:",
+                fb_result
+            )
+            
         post.status = "PUBLISHED"
 
         post.published_at = datetime.utcnow()
