@@ -65,6 +65,7 @@ def meta_callback(
 
     token_data = token_response.json()
     access_token = token_data.get("access_token")
+    print("USER TOKEN:", access_token)
 
     if not access_token:
         return {
