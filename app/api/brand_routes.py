@@ -180,3 +180,36 @@ def update_brand(
     return {
         "success": True
     }
+
+@router.post("/{brand_id}/disconnect")
+def disconnect_brand(
+    brand_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(
+        get_current_user
+    )
+):
+
+    brand = db.query(Brand).filter(
+        Brand.id == brand_id,
+        Brand.user_id == current_user.id
+    ).first()
+
+    if not brand:
+        raise HTTPException(
+            status_code=404,
+            detail="Brand not found"
+        )
+
+    brand.facebook_page_id = None
+    brand.instagram_business_id = None
+    brand.access_token = None
+
+    # if you added this column
+    brand.user_access_token = None
+
+    db.commit()
+
+    return {
+        "success": True
+    }
