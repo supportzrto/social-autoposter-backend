@@ -7,6 +7,8 @@ from pydantic import BaseModel
 
 class PostCreate(BaseModel):
 
+    brand_id: int
+
     title: str
 
     caption: str

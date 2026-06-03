@@ -37,6 +37,7 @@ def create_post(
 ):
 
     brand = db.query(Brand).filter(
+        Brand.id == post.brand_id,
         Brand.user_id == current_user.id
     ).first()
 
@@ -44,13 +45,13 @@ def create_post(
 
         raise HTTPException(
             status_code=400,
-            detail="No Instagram account connected"
+            detail="Invalid brand selected"
         )
 
     new_post = Post(
         user_id=current_user.id,
 
-        brand_id=brand.id,
+        brand_id=post.brand.id,
 
         title=post.title,
 
