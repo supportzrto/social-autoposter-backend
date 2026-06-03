@@ -65,7 +65,7 @@ def meta_callback(
 
     token_data = token_response.json()
     access_token = token_data.get("access_token")
-    print("USER TOKEN:", access_token)
+    
 
     if not access_token:
         return {
@@ -79,6 +79,8 @@ def meta_callback(
         params={"access_token": access_token}
     )
     pages_data = pages_response.json()
+    print("ALL PAGES:")
+    print(pages_data)
 
     if not pages_data.get("data"):
         return {
