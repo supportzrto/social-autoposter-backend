@@ -19,9 +19,16 @@ router = APIRouter(
 
 
 @router.get("/login")
-def meta_login():
+def meta_login(
+    current_user: User = Depends(
+        get_current_user
+    )
+):
+
     return RedirectResponse(
-        get_meta_login_url()
+        get_meta_login_url(
+            current_user.id
+        )
     )
 
 @router.post("/logout")
