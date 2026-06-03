@@ -24,16 +24,22 @@ def meta_login(
         get_current_user
     )
 ):
+
     print(
         "LOGIN USER:",
         current_user.id
     )
 
-    return RedirectResponse(
-        get_meta_login_url(
-            current_user.id
-        )
+    url = get_meta_login_url(
+        current_user.id
     )
+
+    print(
+        "META URL:",
+        url
+    )
+
+    return RedirectResponse(url)
 
 @router.post("/logout")
 def logout(response: Response):
