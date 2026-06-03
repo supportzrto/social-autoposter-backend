@@ -132,9 +132,17 @@ def meta_callback(
             user_access_token=user_access_token
         )
         db.add(brand)
+        print("ACCESS TOKEN:", access_token)
+        print("USER ACCESS TOKEN:", user_access_token)
+        print("BEFORE SAVE:", brand.user_access_token)
 
     db.commit()
     db.refresh(brand)
+
+    print(
+        "AFTER SAVE:",
+        brand.user_access_token
+    )
 
     return {
         "success": True,
