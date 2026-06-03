@@ -219,9 +219,7 @@ def connect_page(
     brand_id: int,
     data: dict,
     db: Session = Depends(get_db),
-    current_user: User = Depends(
-        get_current_user
-    )
+    current_user: User = Depends(get_current_user)
 ):
 
     brand = db.query(Brand).filter(
