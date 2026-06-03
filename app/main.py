@@ -18,13 +18,44 @@ from app.api.media_routes import (
 from app.api.scheduler_routes import (
     router as scheduler_router
 )
+from contextlib import asynccontextmanager
+import asyncio
 
+from app.workers.scheduler import (
+    check_scheduled_posts
+)
 
+@asynccontextmanager
+async def lifespan(app):
+
+    async def scheduler_loop():
+
+        while True:
+
+            try:
+
+                check_scheduled_posts()
+
+            except Exception as e:
+
+                print(
+                    "Scheduler Error:",
+                    str(e)
+                )
+
+            await asyncio.sleep(60)
+
+    asyncio.create_task(
+        scheduler_loop()
+    )
+
+    yield
 
 
 app = FastAPI(
     title="Social Poster API",
-    version="1.0.0"
+    version="1.0.0",
+    lifespan=lifespan
 )
 
 # Create tables
