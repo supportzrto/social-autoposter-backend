@@ -221,3 +221,34 @@ def publish_now(post_id: int):
     return {
         "success": True
     }
+
+@router.post("/posts/{post_id}/retry")
+def retry_post(
+    post_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(
+        get_current_user
+    )
+):
+
+    post = db.query(Post).filter(
+        Post.id == post_id,
+        Post.user_id == current_user.id
+    ).first()
+
+    if not post:
+
+        raise HTTPException(
+            status_code=404,
+            detail="Post not found"
+        )
+
+    post.status = "PENDING"
+    post.error_message = None
+
+    db.commit()
+
+    return {
+        "success": True,
+        "message": "Post queued for retry"
+    }
