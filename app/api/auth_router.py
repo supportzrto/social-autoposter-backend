@@ -46,7 +46,9 @@ def logout(response: Response):
 
 @router.get("/callback")
 def meta_callback(
-    code: str = Query(...), state: str = Query(...), db: Session = Depends(get_db)
+    code: str = Query(...),
+    state: str = Query(...),
+    db: Session = Depends(get_db)
 ):
 
     print("CALLBACK HIT")
@@ -66,71 +68,151 @@ def meta_callback(
         },
     )
 
-    print(token_response.json())
-
     token_data = token_response.json()
+
+    print("TOKEN DATA:", token_data)
+
     access_token = token_data.get("access_token")
     user_access_token = access_token
 
     if not access_token:
-        return {"success": False, "error": token_data}
+        return {
+            "success": False,
+            "error": token_data
+        }
 
-    # Step 2: Get Facebook Pages
+    # Step 2: Get all Facebook pages
     pages_response = requests.get(
         "https://graph.facebook.com/v23.0/me/accounts",
-        params={"access_token": access_token},
+        params={
+            "access_token": access_token
+        }
     )
+
     pages_data = pages_response.json()
-    print("ALL PAGES:")
 
-
-    for p in pages_data["data"]:
-        print(p["name"], p["id"])
+    print("ALL PAGES:", pages_data)
 
     if not pages_data.get("data"):
-        return {"success": False, "error": "No Facebook pages found"}
+        return {
+            "success": False,
+            "error": "No Facebook pages found"
+        }
 
-    page = pages_data["data"][0]
-    page_id = page["id"]
-    page_name = page["name"]
-    page_access_token = page.get("access_token", access_token)
+    selected_page = None
+    selected_ig_id = None
 
-    # Step 3: Get Instagram Business Account
-    ig_response = requests.get(
-        f"https://graph.facebook.com/v23.0/{page_id}",
-        params={
-            "fields": "instagram_business_account",
-            "access_token": page_access_token,
-        },
+    # Step 3: Find page with Instagram Business Account
+    for page in pages_data["data"]:
+
+        page_id = page["id"]
+
+        page_access_token = page.get(
+            "access_token",
+            access_token
+        )
+
+        ig_response = requests.get(
+            f"https://graph.facebook.com/v23.0/{page_id}",
+            params={
+                "fields":
+                "name,instagram_business_account",
+                "access_token":
+                page_access_token
+            }
+        )
+
+        ig_data = ig_response.json()
+
+        print(
+            "PAGE INFO:",
+            page["name"],
+            ig_data
+        )
+
+        if ig_data.get(
+            "instagram_business_account"
+        ):
+
+            selected_page = page
+
+            selected_ig_id = (
+                ig_data["instagram_business_account"]["id"]
+            )
+
+            break
+
+    if not selected_page:
+        return {
+            "success": False,
+            "error":
+            "No Instagram Business Account found"
+        }
+
+    page_id = selected_page["id"]
+
+    page_name = selected_page["name"]
+
+    page_access_token = selected_page.get(
+        "access_token",
+        access_token
     )
-    ig_data = ig_response.json()
-    ig_id = ig_data.get("instagram_business_account", {}).get("id")
 
-    # Step 4: Save or update Brand in DB
+    print(
+        "SELECTED PAGE:",
+        page_name,
+        page_id
+    )
+
+    print(
+        "INSTAGRAM ID:",
+        selected_ig_id
+    )
+
+    # Step 4: Save or update Brand
     brand = (
         db.query(Brand)
-        .filter(Brand.facebook_page_id == page_id, Brand.user_id == user_id)
+        .filter(
+            Brand.facebook_page_id == page_id,
+            Brand.user_id == user_id
+        )
         .first()
     )
 
     if brand:
-        # Update existing brand
+
+        brand.name = page_name
+
         brand.access_token = page_access_token
-        brand.user_access_token = user_access_token
-        brand.instagram_business_id = ig_id
+
+        brand.user_access_token = (
+            user_access_token
+        )
+
+        brand.instagram_business_id = (
+            selected_ig_id
+        )
+
     else:
-        # Create new brand
+
         brand = Brand(
             name=page_name,
+
             user_id=user_id,
+
             facebook_page_id=page_id,
-            instagram_business_id=ig_id,
+
+            instagram_business_id=selected_ig_id,
+
             access_token=page_access_token,
-            user_access_token=user_access_token,
+
+            user_access_token=user_access_token
         )
+
         db.add(brand)
 
     db.commit()
+
     db.refresh(brand)
 
     return {
@@ -174,12 +256,7 @@ def get_all_pages(
 
     if not brand:
         return {"error": "No brand found"}
-    print("CURRENT USER:", current_user.id)
-    print("FOUND BRAND ID:", brand.id)
-    print("FOUND BRAND NAME:", brand.name)
-    print("USER TOKEN:", brand.user_access_token)
-
-    print("USER TOKEN:", brand.user_access_token)
+    
 
     response = requests.get(
         "https://graph.facebook.com/v23.0/me/accounts",
