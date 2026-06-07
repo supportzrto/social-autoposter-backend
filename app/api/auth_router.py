@@ -57,7 +57,7 @@ def meta_callback(
 
     print("STATE USER:", user_id)
 
-    # Step 1: Exchange code for access token
+    # Exchange code for access token
     token_response = requests.get(
         "https://graph.facebook.com/v23.0/oauth/access_token",
         params={
@@ -73,7 +73,6 @@ def meta_callback(
     print("TOKEN DATA:", token_data)
 
     access_token = token_data.get("access_token")
-    user_access_token = access_token
 
     if not access_token:
         return {
@@ -81,7 +80,7 @@ def meta_callback(
             "error": token_data
         }
 
-    # Step 2: Get Facebook Pages
+    # Check pages exist
     pages_response = requests.get(
         "https://graph.facebook.com/v23.0/me/accounts",
         params={
@@ -91,9 +90,7 @@ def meta_callback(
 
     pages_data = pages_response.json()
 
-    print("ALL PAGES:")
-    for p in pages_data.get("data", []):
-        print(p["name"], p["id"])
+    print("ALL PAGES:", pages_data)
 
     if not pages_data.get("data"):
         return {
@@ -101,83 +98,10 @@ def meta_callback(
             "error": "No Facebook pages found"
         }
 
-    selected_page = None
-    selected_ig_id = None
-
-    # Step 3: Check ALL pages
-    for page in pages_data["data"]:
-
-        page_id = page["id"]
-
-        page_access_token = page.get(
-            "access_token",
-            access_token
-        )
-
-        ig_response = requests.get(
-            f"https://graph.facebook.com/v23.0/{page_id}",
-            params={
-                "fields":
-                "name,instagram_business_account",
-                "access_token":
-                page_access_token
-            }
-        )
-
-        ig_data = ig_response.json()
-
-        print(
-            "PAGE INFO:",
-            page["name"],
-            ig_data
-        )
-
-        # only remember first IG page
-        if (
-            selected_page is None
-            and ig_data.get(
-                "instagram_business_account"
-            )
-        ):
-            selected_page = page
-
-            selected_ig_id = (
-                ig_data["instagram_business_account"]["id"]
-            )
-
-    print(
-        "FINAL SELECTED PAGE:",
-        selected_page["name"]
-        if selected_page
-        else None
-    )
-
-    print(
-        "FINAL INSTAGRAM ID:",
-        selected_ig_id
-    )
-
-    if not selected_page:
-        return {
-            "success": False,
-            "error":
-            "No Instagram Business Account found"
-        }
-
-    page_id = selected_page["id"]
-
-    page_name = selected_page["name"]
-
-    page_access_token = selected_page.get(
-        "access_token",
-        access_token
-    )
-
-    # Step 4: Save Brand
+    # Find any existing brand for this user
     brand = (
         db.query(Brand)
         .filter(
-            Brand.facebook_page_id == page_id,
             Brand.user_id == user_id
         )
         .first()
@@ -185,27 +109,14 @@ def meta_callback(
 
     if brand:
 
-        brand.name = page_name
-
-        brand.access_token = page_access_token
-
-        brand.user_access_token = (
-            user_access_token
-        )
-
-        brand.instagram_business_id = (
-            selected_ig_id
-        )
+        brand.user_access_token = access_token
 
     else:
 
         brand = Brand(
-            name=page_name,
+            name="Meta Connected",
             user_id=user_id,
-            facebook_page_id=page_id,
-            instagram_business_id=selected_ig_id,
-            access_token=page_access_token,
-            user_access_token=user_access_token
+            user_access_token=access_token
         )
 
         db.add(brand)
@@ -215,10 +126,7 @@ def meta_callback(
 
     return {
         "success": True,
-        "brand_id": brand.id,
-        "brand_name": brand.name,
-        "facebook_page_id": brand.facebook_page_id,
-        "instagram_business_id": brand.instagram_business_id,
+        "message": "Meta connected successfully"
     }
 
 
@@ -243,24 +151,67 @@ def get_pages(
 
 @router.get("/all-pages")
 def get_all_pages(
-    db: Session = Depends(get_db), current_user: User = Depends(get_current_user)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
 
     brand = (
         db.query(Brand)
-        .filter(Brand.user_id == current_user.id, Brand.user_access_token.isnot(None))
+        .filter(
+            Brand.user_id == current_user.id,
+            Brand.user_access_token.isnot(None)
+        )
         .first()
     )
 
     if not brand:
-        return {"error": "No brand found"}
-    
+        return {
+            "error": "No Meta account connected"
+        }
 
     response = requests.get(
         "https://graph.facebook.com/v23.0/me/accounts",
-        params={"access_token": brand.user_access_token},
+        params={
+            "access_token":
+            brand.user_access_token
+        }
     )
 
-    print("META RESPONSE:", response.json())
+    pages_data = response.json()
 
-    return response.json()
+    result = []
+
+    for page in pages_data.get("data", []):
+
+        page_id = page["id"]
+
+        page_token = page.get(
+            "access_token"
+        )
+
+        ig_response = requests.get(
+            f"https://graph.facebook.com/v23.0/{page_id}",
+            params={
+                "fields":
+                "instagram_business_account",
+                "access_token":
+                page_token
+            }
+        )
+
+        ig_data = ig_response.json()
+
+        result.append({
+            "id": page_id,
+            "name": page["name"],
+            "access_token": page_token,
+            "instagram_business_id":
+            ig_data.get(
+                "instagram_business_account",
+                {}
+            ).get("id")
+        })
+
+    return {
+        "data": result
+    }
