@@ -81,7 +81,7 @@ def meta_callback(
             "error": token_data
         }
 
-    # Step 2: Get all Facebook pages
+    # Step 2: Get Facebook Pages
     pages_response = requests.get(
         "https://graph.facebook.com/v23.0/me/accounts",
         params={
@@ -91,7 +91,9 @@ def meta_callback(
 
     pages_data = pages_response.json()
 
-    print("ALL PAGES:", pages_data)
+    print("ALL PAGES:")
+    for p in pages_data.get("data", []):
+        print(p["name"], p["id"])
 
     if not pages_data.get("data"):
         return {
@@ -102,7 +104,7 @@ def meta_callback(
     selected_page = None
     selected_ig_id = None
 
-    # Step 3: Find page with Instagram Business Account
+    # Step 3: Check ALL pages
     for page in pages_data["data"]:
 
         page_id = page["id"]
@@ -130,17 +132,30 @@ def meta_callback(
             ig_data
         )
 
-        if ig_data.get(
-            "instagram_business_account"
+        # only remember first IG page
+        if (
+            selected_page is None
+            and ig_data.get(
+                "instagram_business_account"
+            )
         ):
-
             selected_page = page
 
             selected_ig_id = (
                 ig_data["instagram_business_account"]["id"]
             )
 
-            break
+    print(
+        "FINAL SELECTED PAGE:",
+        selected_page["name"]
+        if selected_page
+        else None
+    )
+
+    print(
+        "FINAL INSTAGRAM ID:",
+        selected_ig_id
+    )
 
     if not selected_page:
         return {
@@ -158,18 +173,7 @@ def meta_callback(
         access_token
     )
 
-    print(
-        "SELECTED PAGE:",
-        page_name,
-        page_id
-    )
-
-    print(
-        "INSTAGRAM ID:",
-        selected_ig_id
-    )
-
-    # Step 4: Save or update Brand
+    # Step 4: Save Brand
     brand = (
         db.query(Brand)
         .filter(
@@ -197,22 +201,16 @@ def meta_callback(
 
         brand = Brand(
             name=page_name,
-
             user_id=user_id,
-
             facebook_page_id=page_id,
-
             instagram_business_id=selected_ig_id,
-
             access_token=page_access_token,
-
             user_access_token=user_access_token
         )
 
         db.add(brand)
 
     db.commit()
-
     db.refresh(brand)
 
     return {
