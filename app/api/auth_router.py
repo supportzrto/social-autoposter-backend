@@ -12,34 +12,20 @@ from app.models.user_model import User
 from fastapi import Depends
 from fastapi import HTTPException
 
-router = APIRouter(
-    prefix="/auth/meta",
-    tags=["Meta Auth"]
-)
+router = APIRouter(prefix="/auth/meta", tags=["Meta Auth"])
 
 
 @router.get("/login")
-def meta_login(
-    current_user: User = Depends(
-        get_current_user
-    )
-):
+def meta_login(current_user: User = Depends(get_current_user)):
 
-    print(
-        "LOGIN USER:",
-        current_user.id
-    )
+    print("LOGIN USER:", current_user.id)
 
-    url = get_meta_login_url(
-        current_user.id
-    )
+    url = get_meta_login_url(current_user.id)
 
-    print(
-        "META URL:",
-        url
-    )
+    print("META URL:", url)
 
     return RedirectResponse(url)
+
 
 @router.post("/logout")
 def logout(response: Response):
@@ -55,24 +41,19 @@ def logout(response: Response):
         path="/",
     )
 
-    return {
-        "success": True
-    }
+    return {"success": True}
 
 
 @router.get("/callback")
 def meta_callback(
-    code: str = Query(...),
-    state: str = Query(...),
-    db: Session = Depends(get_db)
+    code: str = Query(...), state: str = Query(...), db: Session = Depends(get_db)
 ):
-    
+
     print("CALLBACK HIT")
 
     user_id = int(state)
 
     print("STATE USER:", user_id)
-    
 
     # Step 1: Exchange code for access token
     token_response = requests.get(
@@ -90,28 +71,24 @@ def meta_callback(
     token_data = token_response.json()
     access_token = token_data.get("access_token")
     user_access_token = access_token
-    
 
     if not access_token:
-        return {
-            "success": False,
-            "error": token_data
-        }
+        return {"success": False, "error": token_data}
 
     # Step 2: Get Facebook Pages
     pages_response = requests.get(
         "https://graph.facebook.com/v23.0/me/accounts",
-        params={"access_token": access_token}
+        params={"access_token": access_token},
     )
     pages_data = pages_response.json()
     print("ALL PAGES:")
-    print(pages_data)
+
+
+    for p in pages_data["data"]:
+        print(p["name"], p["id"])
 
     if not pages_data.get("data"):
-        return {
-            "success": False,
-            "error": "No Facebook pages found"
-        }
+        return {"success": False, "error": "No Facebook pages found"}
 
     page = pages_data["data"][0]
     page_id = page["id"]
@@ -123,47 +100,38 @@ def meta_callback(
         f"https://graph.facebook.com/v23.0/{page_id}",
         params={
             "fields": "instagram_business_account",
-            "access_token": page_access_token
-        }
+            "access_token": page_access_token,
+        },
     )
     ig_data = ig_response.json()
     ig_id = ig_data.get("instagram_business_account", {}).get("id")
 
     # Step 4: Save or update Brand in DB
-    brand = db.query(Brand).filter(
-    Brand.facebook_page_id == page_id,
-    Brand.user_id == user_id
-).first()
+    brand = (
+        db.query(Brand)
+        .filter(Brand.facebook_page_id == page_id, Brand.user_id == user_id)
+        .first()
+    )
 
     if brand:
         # Update existing brand
         brand.access_token = page_access_token
-        brand.user_access_token = (user_access_token)
+        brand.user_access_token = user_access_token
         brand.instagram_business_id = ig_id
     else:
         # Create new brand
         brand = Brand(
             name=page_name,
-
             user_id=user_id,
-
             facebook_page_id=page_id,
-
             instagram_business_id=ig_id,
-
             access_token=page_access_token,
-
-            user_access_token=user_access_token
+            user_access_token=user_access_token,
         )
         db.add(brand)
-        
 
     db.commit()
     db.refresh(brand)
-
-    
-
-    
 
     return {
         "success": True,
@@ -173,81 +141,49 @@ def meta_callback(
         "instagram_business_id": brand.instagram_business_id,
     }
 
+
 @router.get("/pages")
 def get_pages(
-    db: Session = Depends(get_db),
-    current_user: User = Depends(
-        get_current_user
-    )
+    db: Session = Depends(get_db), current_user: User = Depends(get_current_user)
 ):
 
-    brand = (
-        db.query(Brand)
-        .filter(
-            Brand.user_id ==
-            current_user.id
-        )
-        .first()
-    )
+    brand = db.query(Brand).filter(Brand.user_id == current_user.id).first()
 
     if not brand:
 
-        raise HTTPException(
-            status_code=404,
-            detail="No connected brand found"
-        )
-    
-   
+        raise HTTPException(status_code=404, detail="No connected brand found")
 
     response = requests.get(
         "https://graph.facebook.com/v23.0/me",
-        params={
-            "access_token":
-                brand.access_token
-        }
+        params={"access_token": brand.access_token},
     )
-    
 
     return response.json()
 
+
 @router.get("/all-pages")
 def get_all_pages(
-    db: Session = Depends(get_db),
-    current_user: User = Depends(
-        get_current_user
-    )
+    db: Session = Depends(get_db), current_user: User = Depends(get_current_user)
 ):
 
     brand = (
         db.query(Brand)
-        .filter(
-            Brand.user_id ==
-            current_user.id,
-            Brand.user_access_token.isnot(None)
-        )
+        .filter(Brand.user_id == current_user.id, Brand.user_access_token.isnot(None))
         .first()
     )
 
     if not brand:
-        return {
-            "error": "No brand found"
-        }
+        return {"error": "No brand found"}
     print("CURRENT USER:", current_user.id)
     print("FOUND BRAND ID:", brand.id)
     print("FOUND BRAND NAME:", brand.name)
     print("USER TOKEN:", brand.user_access_token)
 
-    print(
-        "USER TOKEN:",
-        brand.user_access_token
-    )
+    print("USER TOKEN:", brand.user_access_token)
 
     response = requests.get(
         "https://graph.facebook.com/v23.0/me/accounts",
-        params={
-            "access_token":
-                brand.user_access_token
-        }
+        params={"access_token": brand.user_access_token},
     )
 
     print("META RESPONSE:", response.json())
