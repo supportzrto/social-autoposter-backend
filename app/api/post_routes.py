@@ -51,7 +51,7 @@ def create_post(
     new_post = Post(
         user_id=current_user.id,
 
-        brand_id=post.brand.id,
+        brand_id=post.brand_id,
 
         title=post.title,
 
