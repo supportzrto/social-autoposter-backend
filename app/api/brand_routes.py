@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends
+import requests
 from sqlalchemy.orm import Session
 
 from app.database.database import get_db
@@ -222,10 +223,14 @@ def connect_page(
     current_user: User = Depends(get_current_user)
 ):
 
-    brand = db.query(Brand).filter(
-        Brand.id == brand_id,
-        Brand.user_id == current_user.id
-    ).first()
+    brand = (
+        db.query(Brand)
+        .filter(
+            Brand.id == brand_id,
+            Brand.user_id == current_user.id
+        )
+        .first()
+    )
 
     if not brand:
         raise HTTPException(
@@ -233,12 +238,47 @@ def connect_page(
             detail="Brand not found"
         )
 
-    brand.facebook_page_id = data.get(
+    page_id = data.get(
         "facebook_page_id"
     )
 
-    brand.access_token = data.get(
+    page_access_token = data.get(
         "access_token"
+    )
+
+    # Get Instagram Business Account
+    ig_response = requests.get(
+        f"https://graph.facebook.com/v23.0/{page_id}",
+        params={
+            "fields":
+            "instagram_business_account",
+            "access_token":
+            page_access_token
+        }
+    )
+
+    ig_data = ig_response.json()
+
+    print(
+        "IG DATA:",
+        ig_data
+    )
+
+    instagram_business_id = (
+        ig_data
+        .get(
+            "instagram_business_account",
+            {}
+        )
+        .get("id")
+    )
+
+    brand.facebook_page_id = page_id
+
+    brand.access_token = page_access_token
+
+    brand.instagram_business_id = (
+        instagram_business_id
     )
 
     db.commit()
@@ -246,5 +286,7 @@ def connect_page(
     db.refresh(brand)
 
     return {
-        "success": True
+        "success": True,
+        "instagram_business_id":
+        brand.instagram_business_id
     }
