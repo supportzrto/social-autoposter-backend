@@ -273,6 +273,11 @@ def connect_page(
         .get("id")
     )
 
+    print(
+        "INSTAGRAM BUSINESS ID:",
+        instagram_business_id
+    )
+
     brand.facebook_page_id = page_id
 
     brand.access_token = page_access_token
